@@ -1,522 +1,578 @@
-// 🪴  0  本宏命令文件使用说明
+// 🪴  0  本宏命令文件使用说明 & 函数定义
 
-// 数据输入：Telegram 群聊/频道 中导出的 .json 格式的数据
+// 数据输入：从 Telegram 群聊/频道中导出的 .json 格式的数据
 // 数据输出：
 // CN.txt		倒数第一个文件		一行包含一个网址和一些中文字符（很常见）	直接保存
 // EN.txt		倒数第二个文件		一行包含一个网址和一些英文字符（很少见）	处于筛选状态，删掉筛选的内容和筛选栏的内容，然后保存
-// 其余文件	可以直接删掉不保存
+// 其余文件		可以直接删掉不保存
 
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-// 使用 EmEditor 运行该宏命令前需要注意：
-// 🔴强烈建议：工具（Alt + T）》自定义（C）》编辑
-// 取消勾选【当没有可用的撤消信息时进行提示】以加快执行速度
-// 勾选上【总是丢弃过长的撤消信息来加速】以加快执行速度
-// 🔴不要勾选：使用 V8 作为 JavaScript 引擎
-// 目前，使用 V8 作为 JavaScript 引擎选项默认处于关闭状态，这是因为它与旧的 JScript 宏存在一些不兼容问题。
-// 官网说明🔗https://zh-cn.emeditor.com/emeditor-core/emeditor-v22-1-0-released-including-technical-review/
-// 相关讨论🔗https://stackoverflow.com/questions/75431535/in-checking-use-v8-as-javascript-engine-condition-some-macros-recorded-in-the
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 // 如何使用：
+// 本宏命令文件更适合处理大数据文件。
 // 用 EmEditor 打开数据文件，选中宏，运行宏。
 // 对于单个群聊/频道消息，直接运行宏。
 // 对于多个群聊/频道消息，建议先合并数据文件之后再运行宏。
 
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
-// 可能需要改进的地方
-// 我不是很清楚是不是生成的中间文件有点多，对于大文件可能是有必要，但是对于小文件的话直接覆盖效果会更友好一些
-// 🤔其实可以没有中间文件，但是对于大数据文件，将筛选的内容进行覆盖可能花费时间会更长一些。
-// 但是其实这个都说不一定的。
+// 🔴强烈建议在：工具（Alt + T）》自定义（C）》编辑
+// 👉取消勾选【当没有可用的撤消信息时进行提示】，以加快执行速度
+// 👉勾选【总是丢弃过长的撤消信息来加速】，以加快执行速度
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------------------------
+
+// 🔴不要勾选【使用 V8 作为 JavaScript 引擎】
+// 👉目前，使用 V8 作为 JavaScript 引擎选项默认处于关闭状态，这是因为它与旧的 JScript 宏存在一些不兼容问题。
+// 官网说明🔗https://zh-cn.emeditor.com/emeditor-core/emeditor-v22-1-0-released-including-technical-review/
+// 相关讨论🔗https://stackoverflow.com/questions/75431535/in-checking-use-v8-as-javascript-engine-condition-some-macros-recorded-in-the
+
+// ------------------------------------------------------------------------------------------------
+
+// 用到的宏方法的说明官方详细说明
+// document.DeleteDuplicates			👉🔗https://www.emeditor.org/zh-cn/macro_document_delete_duplicates.html
+// document.Filter						👉🔗https://www.emeditor.org/zh-cn/macro_document_filter.html
+// document.selection.DeleteLeft		👉🔗https://www.emeditor.org/zh-cn/macro_selection_selection_deleteleft.html
+// document.selection.Paste				👉🔗https://www.emeditor.org/zh-cn/macro_selection_selection_paste.html
+// document.selection.Replace			👉🔗https://www.emeditor.org/zh-cn/macro_selection_selection_replace.html
+// document.selection.SelectAll			👉🔗https://www.emeditor.org/zh-cn/macro_selection_selection_selectall.html
+// editor.ExecuteCommandByID			👉🔗https://www.emeditor.org/zh-cn/macro_editor_editor_executecommandbyid.html
+
+// ------------------------------------------------------------------------------------------------
+
+// 函数定义
+// 🤔常用到的操作无非是普通模式和正则模式，因此分类定义同类操作的函数也不是不行
+
+// 普通匹配删除文本行，不区分大小写
+function Normal_Delete(strFilter) {
+    document.Filter(strFilter, 0, 0, 0, 0, 0, 0, 0);						// 普通匹配👈
+    document.selection.SelectAll();											// 全选
+    document.selection.DeleteLeft(1);										// 删除
+}
+
+// 正则匹配删除文本行，不区分大小写
+function Regex_Delete(strFilter) {
+    document.Filter(strFilter, 0, eeFindReplaceRegExp, 0, 0, 0, 0, 0);		// 正则匹配👈
+    document.selection.SelectAll();											// 全选
+    document.selection.DeleteLeft(1);										// 删除
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// 普通提取文本行
+function Normal_Extract(strFilter) {
+	editor.ExecuteCommandByID(3912);										// 将焦点设置在筛选工具栏
+	document.Filter("",0,0,0,0,0,-1,-1);									// 清空筛选工具栏中的内容
+	document.Filter(strFilter, 0, 0, 0, 0, 0, 0, 0);						// 普通匹配👈
+	editor.ExecuteCommandByID(3928);										// 提取所有行
+	
+}
+
+// 正则提取文本行
+function Regex_Extract(strFilter) {
+	editor.ExecuteCommandByID(3912);										// 将焦点设置在筛选工具栏
+	document.Filter("",0,0,0,0,0,-1,-1);									// 清空筛选工具栏中的内容
+	document.Filter(strFilter, 0, eeFindReplaceRegExp, 0, 0, 0, 0, 0);		// 正则匹配👈
+	editor.ExecuteCommandByID(3928);										// 提取所有行
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// 普通覆盖
+function Normal_Overlay(strFilter) {
+	editor.ExecuteCommandByID(3912);										// 将焦点设置在筛选工具栏
+	document.Filter(strFilter, 0, 0, 0, 0, 0, 0, 0);						// 普通匹配👈
+	document.selection.SelectAll();											// 全选
+	document.selection.Cut();												// 剪切
+	editor.ExecuteCommandByID(3912);										// 将焦点设置在筛选工具栏
+	document.Filter("", 0, 0, 0, 0, 0, -1, -1);								// 清空筛选工具栏中的内容
+	document.selection.SelectAll();											// 全选
+	document.selection.Paste(eeCopyUnicode);								// 粘贴覆盖
+}
+
+// 正则覆盖
+function Regex_Overlay(strFilter) {
+	editor.ExecuteCommandByID(3912);										// 将焦点设置在筛选工具栏
+	document.Filter(strFilter, 0, eeFindReplaceRegExp, 0, 0, 0, 0, 0);		// 正则匹配👈
+	document.selection.SelectAll();											// 全选
+	document.selection.Cut();												// 剪切
+	editor.ExecuteCommandByID(3912);										// 将焦点设置在筛选工具栏
+	document.Filter("", 0, 0, 0, 0, 0, -1, -1);								// 清空筛选工具栏中的内容
+	document.selection.SelectAll();											// 全选
+	document.selection.Paste(eeCopyUnicode);								// 粘贴覆盖
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// 普通替换
+function Normal_Replace(strFind, strReplace) {
+	document.selection.Replace(strFind, strReplace, eeReplaceAll, 0);							// 普通替换👈
+}
+
+// 正则替换
+function Regex_Replace(strFind, strReplace) {
+	document.selection.Replace(strFind, strReplace, eeReplaceAll | eeFindReplaceRegExp, 0);		// 正则替换👈
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// 格式处理
+function Clean() {
+	document.DeleteDuplicates("", 0);										// 删除重复行
+	editor.ExecuteCommandByID(4477);										// 按字母升序排序
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// 🤔需要说明的是，提取筛选内容对于大文件效率更快，对于小文件可以使用覆盖操作，即
+// Normal_Extract() 函数和 Regex_Extract() 函数更适合大数据文件
+// Normal_Overlay() 函数和 Regex_Overlay() 函数更适合小数据文件
+// 本宏命令文件针对大数据文件，对于小文件（或者单个文件），只需将 Normal_Extract() 改为使用 Normal_Overlay() ，以及 Regex_Extract() 改为使用 Regex_Overlay() 即可。
+
+// ------------------------------------------------------------------------------------------------
 
 // 🪴  1  筛选需要的参数信息
 
-document.Filter("(\\\"date\\\"|https:\\/\\/)",0,eeFindReplaceRegExp,0,0,0,0,0);// 正则查找 "date" 和 https://
 // 😇其实只需要含有网址的文本行，🤔但是有时间限制，因此还需要加上 "date" 参数文本行
-editor.ExecuteCommandByID(3928);// 提取筛选内容
-document.selection.SelectAll();// 全选
-document.selection.UnIndent();// 取消缩进
-document.DeleteDuplicates("",0);// 删除重复行
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Regex_Extract("(\\\"date\\\"|https:\\/\\/)");			// 正则提取 "date" 参数和网址所在的文本行
+document.selection.SelectAll();							// 全选
+document.selection.UnIndent();							// 取消缩进
+
+// ------------------------------------------------------------------------------------------------
 
 // 🪴  2  筛选年度消息
 
-document.selection.Replace("\\n((?!\\\"date).)", "\\1", eeReplaceAll | eeFindReplaceRegExp, 0);// 删除除了 "date" 参数前面的其余所有换行
-// 这样含有网址的文本行，就是以网址相应的 "date" 参数开头
-document.Filter("https://",0,0,0,0,0,0,0);// 筛选有网址的文本行
-editor.ExecuteCommandByID(3928);// 提取筛选内容
-document.Filter("date\": \"2022",0,eeFindReplaceCase,0,0,0,0,0);// 筛选 2022 年消息
-editor.ExecuteCommandByID(3928);// 提取筛选内容
+Regex_Replace("\\n((?!\\\"date).)","\\1");				// 删除除了 "date" 参数前面的其余所有换行符，这样含有网址的文本行，就是以网址相应的 "date" 参数开头
+Normal_Extract("https://");								// 提取有网址的文本行
+Normal_Extract("date\": \"2023-01");					// 再提取 2023 年 1 月消息
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------------------------
 
 // 🪴  3  把网址从文本行中提取出来 - 掐头去尾
 
 // 处理头部，在网址前面加上换行
-document.selection.Replace("http", "\\nhttp", eeReplaceAll | eeFindReplaceRegExp, 0);// 网址前面加上换行
-// Way-01
-// document.Filter("\"date\"",0,eeFindReplaceCase,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 删除 "date" 参数
-// document.Filter("",0,0,0,0,0,-1,-1);// 清空筛选栏
-// Way-02  可能更快
-document.Filter("https://",0,0,0,0,0,0,0);// 筛选有网址的文本行
-editor.ExecuteCommandByID(3928);// 提取筛选内容
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Regex_Replace("http","\\nhttp");						// 网址前面加上换行
+Normal_Extract("https://");								// 提取有网址的文本行
 
 // 处理尾部，统一使用正则替换为换行符
-// 👉有很多重复网址，内容指向相同但是尾部的非必要符号会有不同，处理掉很必要
-// 🤔这里可能没有列举完，还需要去多思考一下
+// 🤔有很多网址，内容指向相同但是尾部的非必要符号会有不同，因此尾部处理掉很必要
+// 👉对于不可能出现在网址中的字符，可以不用多匹配一个换行符表示只匹配尾部，即直接将这个字符替换为换行符
+Regex_Replace(" ", "\\n");								// 空格
+Regex_Replace("\\|", "\\n");							// 竖线
+Regex_Replace(",", "\\n");								// 英文逗号
+Regex_Replace(";", "\\n");								// 英文分号
+Regex_Replace("\"", "\\n");								// 英文引号
+Regex_Replace("\\(", "\\n");							// 英文左小括号
+Regex_Replace("\\)", "\\n");							// 英文右小括号
+Regex_Replace("\\[", "\\n");							// 英文左中括号
+Regex_Replace("\\]", "\\n");							// 英文右中括号
+Regex_Replace("{", "\\n");								// 英文左大括号
+Regex_Replace("}", "\\n");								// 英文右大括号
+// 👉对于有可能出现在网址中的字符，则需要多匹配一个换行符表示只匹配尾部
+Regex_Replace("@\\n", "\\n");							// 结尾的@
+Regex_Replace("\\.\\n", "\\n");							// 英文句号
+Regex_Replace("\\\\\n", "\\n");							// \
+Regex_Replace("/\\n", "\\n");							// /
+Regex_Replace("#\\n", "\\n");							// #
 
-document.selection.Replace("\"","\\n",eeReplaceAll | eeFindReplaceRegExp,0);// 英文引号
-document.selection.Replace(" ","\\n",eeReplaceAll | eeFindReplaceRegExp,0);// 空格
-document.selection.Replace("\\)","\\n",eeReplaceAll | eeFindReplaceRegExp,0);// 英文右括号
-document.selection.Replace("\\;","\\n",eeReplaceAll | eeFindReplaceRegExp,0);// 英文分号
-document.selection.Replace(",","\\n",eeReplaceAll | eeFindReplaceRegExp,0);// 英文逗号
-// 注意以下三种情况需要多匹配一个换行符，与网址格式相区别
-document.selection.Replace("\\.\\n","\\n",eeReplaceAll | eeFindReplaceRegExp,0);// 英文句号
-document.selection.Replace("/\\n","\\n",eeReplaceAll | eeFindReplaceRegExp,0);// / 
-document.selection.Replace("\\\\\n", "\\n", eeReplaceAll | eeFindReplaceRegExp, 0);// \
+Normal_Extract("https://");								// 提取有网址的文本行
+Clean();												// 删除重复行，按字母排序
+// Clean(); 这行代码放在提取最后一部分的第一句位置其实是可以的，但是实际操作显示并没有执行此行代码，有点奇怪。🤔🤔
+// 不过 Clean(); 这句代码放在网址黑名单前面执行也可以减轻后续的 Normal_Delete() 的工作量（此时文本有序了）
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-document.Filter("https://",0,0,0,0,0,0,0);// 筛选有网址的文本行
-editor.ExecuteCommandByID(3928);// 提取筛选内容
-document.DeleteDuplicates("",0);// 删除重复网址
-editor.ExecuteCommandByID(4477);// 按字母升序排序
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------------------------
 
 // 🪴  4  网址黑名单
 
-// 网络黑名单这一块因人而异，我搜集的选择是不会让我消费的、我觉得高质量的网站，内容偏向程序员方向。
-// 目前还有待整理，需要找一些参考的例子
+// ------------------------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// 不想消费
 
-// 👀目前没有使用的电子产品
+// 1 电商平台✅
+// 资料参考：全球主流跨境电商平台汇总（超全）🔗https://zhuanlan.zhihu.com/p/411087832
 
-// 苹果
-document.Filter("apple",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("ipad",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("iphone",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("airpod",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-//document.Filter("mac",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-// 这里不能写 mac 这个词，因为会错杀 machine macro 之类的词语
-document.Filter("eclecticlight",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("9to5mac",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("macrumors",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("macstories",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("icloud.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete("jd");									// 京东
+Normal_Delete("taobao");								// 淘宝
+Normal_Delete("meituan");								// 美团
+Normal_Delete("goofish");								// 咸鱼
+Normal_Delete("pinduoduo");								// 拼多多
+Normal_Delete("jinritemai");							// 抖店
+Normal_Delete("douyin");								// 抖音
+Normal_Delete("suning");								// 苏宁易购
+Normal_Delete("dangdang");								// 当当
+Normal_Delete("amazon");								// Amazon
+Normal_Delete("ebay");									// eBay
+Normal_Delete("aliexpress");							// 速卖通
+Normal_Delete("walmart");								// 沃尔玛
 
-// 谷歌 安卓
-document.Filter("google",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-//document.Filter("9to5google",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-//document.Filter("play.google",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("android",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("f-droid.org",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+// 2 手机为代表的移动端
+// 👉👉苹果公司相关服务
+Normal_Delete("apple");									// 
+Normal_Delete("iphone");								// 
+Normal_Delete("ipad");									// 
+Normal_Delete("airpod");								// 
+Normal_Delete("icloud");								// 
+Normal_Delete("imac");									// 这里使用 imac 可以是可以，但是很容易误杀一些别的网站，因为 imac 这个词可以在别的词中出现
+Normal_Delete("eclecticlight");							// 和苹果公司相关的网站，页面设计和艺术水平很高，但是对我来说并不重要
+Normal_Delete("9to5mac");								// 苹果公司相关新闻推送
+Normal_Delete("macrumors");								// 苹果公司相关新闻推送
+Normal_Delete("macstories");							// 苹果产品相关资讯
+// 👉👉谷歌公司相关服务
+Normal_Delete("google");								// 
+Normal_Delete("9to5google");							// 
+Normal_Delete("play.google");							// 
+Normal_Delete("android");								// 
+Normal_Delete("f-droid.org");							// 
+// 👉👉别的一些手机产品
+Normal_Delete("moblie");								// 单纯的手机网站
+Normal_Delete("samsung");								// 三星
+Normal_Delete("sammobile");								// 三星
+Normal_Delete("oneplus");								// 一加
+Normal_Delete("oppo");									// OPPO
+Normal_Delete("vivo");									// VIVO
+Normal_Delete("hihonor");								// 荣耀
+Normal_Delete("meizu");									// 魅族
+Normal_Delete("huawei.com");							// 华为，但是我同时想要保留华为云服务
 
-// 一些手机产品
-document.Filter("samsung",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 三星
-document.Filter("sammobile.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 三星
-document.Filter("oneplus",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 一加
-document.Filter("oppo",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// OPPO
-document.Filter("vivo",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// VIVO
-document.Filter("hihonor",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 荣耀
-document.Filter("meizu",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 魅族
-document.Filter("moblie",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 单纯的手机网站
+// 3 流媒体 | 泛用性客户端
+Regex_Delete("//((?!mp\\.weixin).)*\\.qq\\.com");		// 腾讯，同时保留微信公众号文章
 
-// 别的不是手机的产品
-document.Filter("dji.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 大疆
+Normal_Delete("netflix");								// Netflix
+Normal_Delete("disney");								// Disney
+Normal_Delete("kuaishou");								// 快手
+Normal_Delete("douyu");									// 斗鱼
+Normal_Delete("sina");									// 新浪
+Normal_Delete("weibo");									// 微博
+Normal_Delete("facebook");								// Facebook
+Normal_Delete("ghxi.com");								// 果核剥壳
+Normal_Delete("hupu");									// 虎扑
+Normal_Delete("xiaoyuzhoufm");							// 小宇宙
+Normal_Delete("instagram");								// Instagram
+Normal_Delete("tiktok");								// TikTok
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// 4 网课 | 知识付费 | 硬件付费
+Normal_Delete("dji.com");								// 大疆
+Normal_Delete("coding.imooc.com");						// 慕课网
+Normal_Delete("cloud");									// 云服务
+Normal_Delete("acwing");								// 这个一般是组团买课链接
+Normal_Delete("smzdm.com");								// 什么值得买网站
+Normal_Delete("zhaniker.zom");							// 
+Normal_Delete("chongdiantou.com");						// 
+Normal_Delete("chinese.engadget.com");					//
 
-// 流媒体 | 泛用性客户端
-document.Filter("netflix",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Netflix
-document.Filter("disney",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Disney
-document.Filter("douyin",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 抖音
-document.Filter("kuaishou",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 快手
-document.Filter("douyu",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 斗鱼
-document.Filter("//((?!mp\\.weixin).)*\\.qq\\.com",0,eeFindReplaceRegExp,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// QQ
-// 这里保留了 weixin.qq.com ，微信公众号的文章还是有一部分比例高质量的文章的
-document.Filter("sina",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 新浪
-document.Filter("weibo",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 微博
-document.Filter("facebook",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Facebook
-document.Filter("ghxi.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 果核剥壳
-document.Filter("hupu.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 虎扑
-document.Filter("xiaoyuzhoufm.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 小宇宙
-document.Filter("instagram",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Instagram
-document.Filter("tiktok",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// TikTok
-
-
-
-
-
-// 电商
-document.Filter("jd",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 京东
-document.Filter("taobao",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 淘宝
-document.Filter("meituan",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 美团
-document.Filter("goofish",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 咸鱼
-document.Filter("amazon",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 亚马逊
-
-
-
-
-
-// 知识付费 | 硬件付费
-document.Filter("coding.imooc.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 慕课网
-document.Filter("cloud",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 云服务
-document.Filter("acwing",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个一般是组团买课链接
-document.Filter("smzdm.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 什么值得买网站
-document.Filter("zhaniker.zom",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("chongdiantou.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("chinese.engadget.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-
-
-
+// ------------------------------------------------------------------------------------------------
 
 // 我不需要的网址 | 低质量网站 | 我不爱看的网站 | 游戏类网站 | 记录别人数据的网站
-document.Filter("speedtest",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 测速工具，我暂时不需要
-document.Filter("imgur.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 截图保存网站，我不需要
-document.Filter("lrepacks.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 俄文，看不懂
-document.Filter("iois.me",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 我没有订阅他们的 NewsLetter
-document.Filter("://paste",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 代码片段托管
-document.Filter("pixiv.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// pixiv
-document.Filter("fishpi.cn",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个论坛网站感觉不怎么样
-document.Filter("ruike1.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个论坛网站感觉也是不怎么样
-document.Filter("zoom.us",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Zoom
-document.Filter("epicgames",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Epic Game
-document.Filter("ldqk.xyz",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个群聊的信息不要加入
-document.Filter("douban",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 豆瓣
-document.Filter("live.bilibili.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// B站直播
-// 🔴需要把别的的直播源给加上，比如央视的
-document.Filter("space.bilibili.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// B站相关
-// 🤔🤔🤔🤔我其实在想，到底要不要放弃 B站 ?
-document.Filter("steampowered",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 游戏
-document.Filter("tzsucai.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个是素材网站，我暂时不需要
-document.Filter("game",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("spendtest.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("store.steampowered.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("kuaizhan.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("nhentai.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 色色的东西
-document.Filter("xbox.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Xbox 游戏
 
-
-
+Normal_Delete("speedtest");								// 测速工具，我暂时不需要
+Normal_Delete("imgur.com");								// 截图保存网站，我不需要
+Normal_Delete("lrepacks.net");							// 俄文，看不懂
+Normal_Delete("iois.me");								// 我没有订阅他们的 NewsLetter
+Normal_Delete("://paste");								// 代码片段托管
+Normal_Delete("pixiv.net");								// pixiv
+Normal_Delete("fishpi.cn");								// 这个论坛网站感觉不怎么样
+Normal_Delete("ruike1.com");							// 这个论坛网站感觉也是不怎么样
+Normal_Delete("zoom.us");								// Zoom
+Normal_Delete("epicgames");								// Epic Game
+Normal_Delete("ldqk.xyz");								// 这个群聊的信息不要加入
+Normal_Delete("douban");								// 豆瓣
+Normal_Delete("live.bilibili.com");						// B站直播 🔴需要把别的的直播源给加上，比如央视的
+Normal_Delete("space.bilibili.com");					// B站相关 🤔我其实在想，到底要不要放弃 B站 ?
+Normal_Delete("steampowered");							// 游戏
+Normal_Delete("tzsucai.com");							// 这个是素材网站，我暂时不需要
+Normal_Delete("game");									// 
+Normal_Delete("spendtest.net");							// 
+Normal_Delete("store.steampowered.com");				// 
+Normal_Delete("kuaizhan");								// 快赞
+Normal_Delete("nhentai.net");							// 色色的东西
+Normal_Delete("xbox.com");								// Xbox 游戏
 
 // 适合主动搜索而不是被动吸收内容的网站
-document.Filter("52pojie.cn",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 52 破解 容易出现 too many request 的问题，有需求再去了解吧。
-document.Filter("fars.ee",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 52 破解 容易出现 too many request 的问题，有需求再去了解吧。
-document.Filter("ithome",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// IT 之家
-document.Filter("wiki",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// Wiki
-document.Filter("en.cppreference.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 当你知道 cppreference 怎么使用之后，主动打开最好。
-document.Filter("v2ex.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("sohu.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 搜狐
-document.Filter("ahhhhfs.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 一个个人资源站点
-document.Filter("bugs.",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// bugs
-
-
-
-
-
+Normal_Delete("52pojie.cn");							// 52 破解 容易出现 too many request 的问题，有需求再去了解吧。
+Normal_Delete("fars.ee");								// 
+Normal_Delete("ithome");								// IT 之家
+Normal_Delete("wiki");									// Wiki
+Normal_Delete("en.cppreference.com");					// 当你知道 cppreference 怎么使用之后，主动打开最好。
+Normal_Delete("v2ex.com");								// 
+Normal_Delete("sohu.com");								// 搜狐
+Normal_Delete("ahhhhfs.com");							// 一个个人资源站点
+Normal_Delete("bugs.");									// bugs 🔴这个关键词我还是需要去确认一下
 
 // 网盘类 | 下载类
-document.Filter("baidu",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 百度
-document.Filter("163.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 163 网盘
-document.Filter("download.csdn.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// csdn资料下载，csdn 还不至于到所有的内容都是垃圾
-document.Filter("123pan.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("lanzou",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 蓝奏网盘
-document.Filter("yunpanziyuan.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("ziyuanluntan.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("yunpanziyuan.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-
-
-
+Normal_Delete("baidu");									// 百度
+Normal_Delete("163.com");								// 163 网盘
+Normal_Delete("download.csdn.net");						// csdn资料下载，csdn 还不至于到所有的内容都是垃圾
+Normal_Delete("123pan.com");							// 123 网盘，质量一般
+Normal_Delete("lanzou");								// 蓝奏网盘
+Normal_Delete("yunpanziyuan.com");						// 
+Normal_Delete("ziyuanluntan.com");						// 
+Normal_Delete("yunpanziyuan.com");						//
 
 // 报纸类 | 新闻类
-// 有些报纸实行订阅制，我不是他们所谓的用户
-document.Filter("news.",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("zaobao",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("bloomberg.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 彭博社
-document.Filter("cn.nikkei.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 日本经济新闻中文版
-document.Filter("cn.yna.co.kr",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 韩联社
-document.Filter("fortune.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个报纸内容可以免费看，但是我不想看
-document.Filter("ftchinese.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// FT 中文网
-document.Filter("nytimes.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// New York Times
-document.Filter("wsj.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 华尔街日报
-document.Filter("edition.cnn",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// CNN
-document.Filter("jiemian.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 界面新闻
-document.Filter("wallstreetcn.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("bbc.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// BBC
-document.Filter("reuters.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 路透社
-
-
-
+// 有些报纸的订阅制对于目前的我来说不适用，有些报纸我没有想过养成习惯去看
+Normal_Delete("news.");									// 新闻
+Normal_Delete("zaobao");								// 早报
+Normal_Delete("bloomberg.com");							// 彭博社
+Normal_Delete("cn.nikkei.com");							// 日本经济新闻中文版
+Normal_Delete("cn.yna.co.kr");							// 韩联社
+Normal_Delete("fortune.com");							// 这个报纸内容可以免费看，但是我不想看
+Normal_Delete("ftchinese.com");							// FT 中文网
+Normal_Delete("nytimes.com");							// New York Times
+Normal_Delete("wsj.com");								// 华尔街日报
+Normal_Delete("edition.cnn");							// CNN
+Normal_Delete("jiemian.com");							// 界面新闻
+Normal_Delete("wallstreetcn.com");						// 
+Normal_Delete("bbc.com");								// BBC
+Normal_Delete("reuters.com");							// 路透社
 
 // 打不开的网址
-document.Filter("archive.org",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("cnbeta.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// cnbeta 已经寄了
-document.Filter("fuqing.ch",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("gg0.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("jikipedia.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 小鸡词典已经寄了
-document.Filter("macsofter",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("pozou",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("racknerd",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("tategaki.de",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("thepaper.cnewsDetail",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// cnbeta 已经寄了
-document.Filter("vmovier.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 打不开
-document.Filter("youpanso",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("ip.jiangxianli.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 危险网站
-
-
-
-
+Normal_Delete("archive.org");							// 
+Normal_Delete("cnbeta.com");							// cnbeta 已经寄了
+Normal_Delete("fuqing.ch");								// 
+Normal_Delete("gg0.net");								// 
+Normal_Delete("jikipedia.com");							// 小鸡词典已经寄了
+Normal_Delete("macsofter");								// 
+Normal_Delete("pozou");									// 
+Normal_Delete("racknerd");								// 
+Normal_Delete("tategaki.de");							// 
+Normal_Delete("thepaper.cnewsDetail");					// cnbeta 已经寄了
+Normal_Delete("vmovier.com");							// 
+Normal_Delete("youpanso");								// 
+Normal_Delete("ip.jiangxianli.com");					// 危险网站
 
 // 手机端链接
-document.Filter("//m.",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这里一定要加上 "/" ，要区别 com 和 medium 等单词
-document.Filter("mobile",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-
-
-
-
+Normal_Delete("//m.");									// 这里一定要加上 "/" ，要区别 com 和 medium 等单词
+Normal_Delete("mobile");								// 
 
 // 🔴🔴🔴🔴待整理的网站
-document.Filter("oiloil.lan",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("noisevip.cn",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("money.udn.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("vipc6.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("videogameschronicle.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("vgtime.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("toptal.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("rfi.fr",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("gsnew.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);//看电影的
-document.Filter("3c.ltn.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("3g.china.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("115.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("bbs.fuyuan6.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("hostloc.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("godbolt.org",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("423down.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("zxxk.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 
-document.Filter("1point3acres.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("58pic.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("cgown.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("cool3c.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("dianbo.org",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("fjhn.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("ft.nom",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("phononix.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("scmn.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("tzsncai.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("vmonier.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("ypsnare.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("zndn.com",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("fjha.net",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete("oiloil.lan");							// 
+Normal_Delete("noisevip.cn");							// 
+Normal_Delete("money.udn.com");							// 
+Normal_Delete("vipc6.com");								// 
+Normal_Delete("videogameschronicle.com");				// 
+Normal_Delete("vgtime.com");							// 
+Normal_Delete("toptal.com");							// 
+Normal_Delete("rfi.fr");								// 
+Normal_Delete("gsnew.com");								// 看电影的
+Normal_Delete("3c.ltn.com");							// 
+Normal_Delete("3g.china.com");							// 
+Normal_Delete("115.com");								// 
+Normal_Delete("bbs.fuyuan6.com");						// 
+Normal_Delete("hostloc.com");							// 
+Normal_Delete("godbolt.org");							// 
+Normal_Delete("423down.com");							// 
+Normal_Delete("zxxk.com");								// 
+Normal_Delete("1point3acres.com");						// 
+Normal_Delete("58pic.com");								// 
+Normal_Delete("cgown.com");								// 
+Normal_Delete("cool3c.com");							// 
+Normal_Delete("dianbo.org");							// 
+Normal_Delete("fjhn.net");								// 
+Normal_Delete("ft.nom");								// 
+Normal_Delete("phononix.com");							// 
+Normal_Delete("scmn.com");								// 
+Normal_Delete("tzsncai.com");							// 
+Normal_Delete("vmonier.com");							// 
+Normal_Delete("ypsnare.com");							// 
+Normal_Delete("zndn.com");								// 
+Normal_Delete("fjha.net");								// 
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 // 高深的内容 | 技术相关但是细枝末节的内容 等等
 
 // RSS 相关
-document.Filter("rsshub.app",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("/feed",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("/atom",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".atom",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete("rsshub.app");							// 
+Normal_Delete("/feed");									// 
+Normal_Delete("/atom");									// 
+Normal_Delete(".atom");									// 
 
 // Github 相关
-document.Filter("/compare/",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("/commit/",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("/issues/",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("/pull/",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("/releases/",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("/discussions/",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete("/compare/");								// 
+Normal_Delete("/commit/");								// 
+Normal_Delete("/issues/");								// 
+Normal_Delete("/pull/");								// 
+Normal_Delete("/releases/");							// 
+Normal_Delete("/discussions/");							// 
 
 // Telegram 相关
-document.Filter("t.me/addtheme",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 界面主题
-document.Filter("t.me/addstickers",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 贴纸
-document.Filter("t.me/addemoji",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 表情包
-document.Filter("t.me/setlanguage",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 语言
-document.Filter("t.me/proxy?server=",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个和代理相关
-document.Filter("t.me/socks?server=",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个和代理相关
+Normal_Delete("t.me/addtheme");							// 界面主题
+Normal_Delete("t.me/addstickers");						// 贴纸
+Normal_Delete("t.me/addemoji");							// 表情包
+Normal_Delete("t.me/setlanguage");						// 语言
+Normal_Delete("t.me/proxy?server=");					// 这个和代理相关
+Normal_Delete("t.me/socks?server=");					// 这个和代理相关
 
 // 代理相关
-document.Filter("v1.mk",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 节点相关
-document.Filter("://xn",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 一元机场
-document.Filter("vps",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// vps
+Normal_Delete("v1.mk");									// 节点相关
+Normal_Delete("://xn");									// 一元机场
+Normal_Delete("vps");									// vps
 
 // Matlab 相关
-document.Filter("matlab",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter("mathworks",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 其实主要是下面的 ww2.mathworks.cn 
-document.Filter("ww2.mathworks.cn",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 相关网站
+Normal_Delete("matlab");								// 
+Normal_Delete("mathworks");								// 其实主要是下面的 ww2.mathworks.cn 
+Normal_Delete("ww2.mathworks.cn");						// 相关网站
 
 // Linux 相关
 // 我目前是在 WSL2 上安装 Ubuntu-22.04 来完成日常的一些工作，是 Linux 新手
-// 🤔🤔不过也不是说这个发行版我不用就把这个关键词拉入黑名单，一般的做法是看到页面中有类似 archlinux 的单词我会把页面关掉，因为这个发行版今年不会考虑学习
-//document.Filter("macOS",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个发行版今年不会考虑学习
-//document.Filter("archlinux",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个发行版今年不会考虑学习
-//document.Filter("redhat",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 这个发行版今年不会考虑学习
-//document.Filter("mozilla",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 火狐
-//document.Filter("firefox",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// 火狐
-//document.Filter("gentoo",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete("macOS");									// MacOS
+Normal_Delete("archlinux");								// Arch Linux
+Normal_Delete("redhat");								// RedHat
+Normal_Delete("mozilla");								// 火狐
+Normal_Delete("firefox");								// 火狐
+Normal_Delete("gentoo");								// Gentoo
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 // 不想下载文件链接
 // 🔴🔴🔴🔴这一块其实还是搞成正则表达式会比较精确一些
 // 常见文件格式参考：https://docs-cn.eagle.cool/article/18-what-file-formats-does-eagle-support?categoryId=5-category
 // 图片
-document.Filter(".avif",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".base64",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".bmp",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".eps",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);	
-document.Filter(".gif",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".heic",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".heif",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".hif",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".icns",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ico",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".insp",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".jfif",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".jpe",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".jpeg",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".jpg",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".jxl",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".png",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".svg",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".tif",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".tiff",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ttf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".webp",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".avif");									// 
+Normal_Delete(".base64");								// 
+Normal_Delete(".bmp");									// 
+Normal_Delete(".eps");									// 
+Normal_Delete(".gif");									// 
+Normal_Delete(".heic");									// 
+Normal_Delete(".heif");									// 
+Normal_Delete(".hif");									// 
+Normal_Delete(".icns");									// 
+Normal_Delete(".ico");									// 
+Normal_Delete(".insp");									// 
+Normal_Delete(".jfif");									// 
+Normal_Delete(".jpe");									// 
+Normal_Delete(".jpeg");									// 
+Normal_Delete(".jpg");									// 
+Normal_Delete(".jxl");									// 
+Normal_Delete(".png");									// 
+Normal_Delete(".svg");									// 
+Normal_Delete(".tif");									// 
+Normal_Delete(".tiff");									// 
+Normal_Delete(".ttf");									// 
+Normal_Delete(".webp");									// 
 // 3D
-document.Filter(".3ds",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".3mf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".blender",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".dae",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".fbx",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".glb",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ifc",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".obj",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ply",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".stl",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".3ds");									// 
+Normal_Delete(".3mf");									// 
+Normal_Delete(".blender");								// 
+Normal_Delete(".dae");									// 
+Normal_Delete(".fbx");									// 
+Normal_Delete(".glb");									// 
+Normal_Delete(".ifc");									// 
+Normal_Delete(".obj");									// 
+Normal_Delete(".ply");									// 
+Normal_Delete(".stl");									// 
 // 贴图
-document.Filter(".dds",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".exr",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".hdr",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".tga",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".dds");									// 
+Normal_Delete(".exr");									// 
+Normal_Delete(".hdr");									// 
+Normal_Delete(".tga");									// 
 // 源文件
-document.Filter(".Principle",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".afdesign",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".afphoto",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".afpub",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ai",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".c4d",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".cdr",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".clip",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".dwg",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".fig",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".graffle",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".idml",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".indd",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".indt",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".mindnode",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".psb",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".psd",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".psdt",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".pxd",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".sketch",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".skp",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".skt",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".xd",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".xmind",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".Principle");							// 
+Normal_Delete(".afdesign");								// 
+Normal_Delete(".afphoto");								// 
+Normal_Delete(".afpub");								// 
+Normal_Delete(".ai");									// 
+Normal_Delete(".c4d");									// 
+Normal_Delete(".cdr");									// 
+Normal_Delete(".clip");									// 
+Normal_Delete(".dwg");									// 
+Normal_Delete(".fig");									// 
+Normal_Delete(".graffle");								// 
+Normal_Delete(".idml");									// 
+Normal_Delete(".indd");									// 
+Normal_Delete(".indt");									// 
+Normal_Delete(".mindnode");								// 
+Normal_Delete(".psb");									// 
+Normal_Delete(".psd");									// 
+Normal_Delete(".psdt");									// 
+Normal_Delete(".pxd");									// 
+Normal_Delete(".sketch");								// 
+Normal_Delete(".skp");									// 
+Normal_Delete(".skt");									// 
+Normal_Delete(".xd");									// 
+Normal_Delete(".xmind");								// 
 // 视频
-document.Filter(".avi",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".m4v",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".mov",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".mp4",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".mpg",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".webm",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".wmv",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".avi");									// 
+Normal_Delete(".m4v");									// 
+Normal_Delete(".mov");									// 
+Normal_Delete(".mp4");									// 
+Normal_Delete(".mpg");									// 
+Normal_Delete(".webm");									// 
+Normal_Delete(".wmv");									// 
 // 音频
-document.Filter(".aac",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".flac",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".m4a",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".mp3",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ogg",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".wav",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".aac");									// 
+Normal_Delete(".flac");									// 
+Normal_Delete(".m4a");									// 
+Normal_Delete(".mp3");									// 
+Normal_Delete(".ogg");									// 
+Normal_Delete(".wav");									// 
 // 字体
-document.Filter(".otf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ttc",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ttf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".woff",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".otf");									// 
+Normal_Delete(".ttc");									// 
+Normal_Delete(".ttf");									// 
+Normal_Delete(".woff");									// 
 // RAW
-document.Filter(".3fr",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".arw",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".cr2",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".cr3",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".crw",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".dng",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".erf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".mrw",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".nef",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".nrw",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".orf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".otf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".pef",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".raf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".raw",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".rw2",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".sr2",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".srw",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".x3f",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".3fr");									// 
+Normal_Delete(".arw");									// 
+Normal_Delete(".cr2");									// 
+Normal_Delete(".cr3");									// 
+Normal_Delete(".crw");									// 
+Normal_Delete(".dng");									// 
+Normal_Delete(".erf");									// 
+Normal_Delete(".mrw");									// 
+Normal_Delete(".nef");									// 
+Normal_Delete(".nrw");									// 
+Normal_Delete(".orf");									// 
+Normal_Delete(".otf");									// 
+Normal_Delete(".pef");									// 
+Normal_Delete(".raf");									// 
+Normal_Delete(".raw");									// 
+Normal_Delete(".rw2");									// 
+Normal_Delete(".sr2");									// 
+Normal_Delete(".srw");									// 
+Normal_Delete(".x3f");									// 
 // 办公
-document.Filter(".doc",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".docx",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".eddx",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".emmx",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".key",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".numbers",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".pages",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-//document.Filter(".pdf",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);// PDF 文件应当保留查看
-document.Filter(".potx",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".ppt",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".pptx",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".txt",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".xls",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".xlsx",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".doc");									// 
+Normal_Delete(".docx");									// 
+Normal_Delete(".eddx");									// 
+Normal_Delete(".emmx");									// 
+Normal_Delete(".key");									// 
+Normal_Delete(".numbers");								// 
+Normal_Delete(".pages");								// 
+// Normal_Delete(".pdf");								// PDF 文件应当保留查看
+Normal_Delete(".potx");									// 
+Normal_Delete(".ppt");									// 
+Normal_Delete(".pptx");									// 
+Normal_Delete(".txt");									// 
+Normal_Delete(".xls");									// 
+Normal_Delete(".xlsx");									// 
 // (+)压缩包
-document.Filter(".7z",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".apk",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".dmg",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".exe",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".gz",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".rar",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".tgz",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".zip",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".7z");									// 
+Normal_Delete(".apk");									// 
+Normal_Delete(".dmg");									// 
+Normal_Delete(".exe");									// 
+Normal_Delete(".gz");									// 
+Normal_Delete(".rar");									// 
+Normal_Delete(".tgz");									// 
+Normal_Delete(".zip");									// 
 // (+)别的格式
-document.Filter(".bin",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".deb",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".sh",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
-document.Filter(".txt",0,0,0,0,0,0,0);document.selection.SelectAll();document.selection.DeleteLeft(1);
+Normal_Delete(".bin");									// 
+Normal_Delete(".deb");									// 
+Normal_Delete(".sh");									// 
+Normal_Delete(".txt");									// 
+Normal_Delete(".yaml");									// 
+Normal_Delete(".api");									// 
+Normal_Delete(".msi");									//
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-// 把筛选栏清空
-editor.ExecuteCommandByID(3912);// 将焦点设置在筛选工具栏
-document.Filter("",0,0,0,0,0,-1,-1);// 清空筛选工具栏中的内容
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------------------------
 
 // 🪴  5  分离中文
 
-document.Filter("[^\\x00-\\xff]",0,eeFindReplaceRegExp,0,0,0,0,0);// 另存中文
-editor.ExecuteCommandByID(3928);// 提取筛选内容
-editor.ExecuteCommandByID(4099);// 保存
+Regex_Extract("[^\\x00-\\xff]");						// 提取含有中文的文本行
+editor.ExecuteCommandByID(4099);						// 保存
 
-// 最终得到两个文本文件
-// 保存的这个文件就是 CN.txt
-// 运行该宏命令文件的数据文件就是 EN.txt
-// 其余文件直接删除即可
+// 执行完这个宏命令文件之后：
+// 👉保存倒数第一个文件，可以另存为 CN.txt；
+// 👉倒数第二个文件应该还处于筛选状态，删除筛选内容，再删除筛选栏中的内容，另存为 EN.txt；
+// 👉其余的文件是中间文件，可以直接删除。
