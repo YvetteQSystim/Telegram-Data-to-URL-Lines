@@ -1,14 +1,26 @@
 // ------------------------------------------------------------------------------------------------
 
-// 函数定义
-// 主要分为 普通模式、正则模式、转义模式，当然应该还有别的模式但是我没有加上去
-// 这些不同的模式下做的相同的事情可以用一个函数去复用的，只是多一个参数罢了。
+// 吐槽
+// EmEditor 目前在某些方面还不是很支持 Javascript 语言的语法实现。
+// 比如，目前的 V8 和已有的宏存在不兼容的问题。
+// 比如，有些 EmEditor 的宏方法是和光标的位置有关系的，这在某些场景是很人性化，但是在宏运行的时候不小心移动光标会影响结果，这会带来困扰。
+// 比如，如何在 javascript 文件中调用另一个 javascript 中的函数这个问题，在 EmEditor 中使用的是 #include "<filename>" ，但是 import fetch 等命令在 EmEditor 中是不支持的。
+// 所以，很难不流汗😅
 
 // ------------------------------------------------------------------------------------------------
 
-// 文本处理相关函数
+// 这个文件罗列宏命令文件的公用函数定义。
+// 关于字符处理相关的函数，主要是 普通模式(Noemal)、正则模式(Regex)和转义模式(Escape)三种，调用函数的时候若没有指认第一个参数的话，默认都是 Normal 模式。
+// 关于文本排版相关的函数，基本上是可以完全通用的。
+// 另外一些关于网址个性化处理的函数也放入了本文件中，之后如果再增加一两个网址处理的函数，则会考虑新建一个 "URL Analysis.js" 文件单独存放
 
-// ✅删除筛选的文本行
+// ------------------------------------------------------------------------------------------------
+
+// 字符处理相关函数
+
+// ------------------------------------------------------------------------------------------------
+
+// 删除筛选的文本行
 function Delete_Lines(strModule, strFilter) {
 	document.Filter("", 0, 0, 0, 0, 0, -1, -1);		// 👉清空筛选工具栏中的内容
 	if (strModule == "Regex")						// 正则匹配👈
@@ -22,7 +34,7 @@ function Delete_Lines(strModule, strFilter) {
     document.Filter("", 0, 0, 0, 0, 0, -1, -1);		// 👉清空筛选栏中的内容
 }
 
-// ✅提取符合筛选条件的文本行
+// 提取符合筛选条件的文本行
 function Extract_Lines(strModule, strFilter) {
 	document.Filter("", 0, 0, 0, 0, 0, -1, -1);		// 👉清空筛选栏中的内容
 	if (strModule == "Regex")						// 正则匹配👈
@@ -34,7 +46,7 @@ function Extract_Lines(strModule, strFilter) {
 	editor.ExecuteCommandByID(3928);				// 👉提取所有行
 }
 
-// ✅提取符合筛选条件的文本行并覆盖原有的所有文本行
+// 提取符合筛选条件的文本行并覆盖原有的所有文本行
 function Overlay_Lines(strModule, strFilter) {
 	editor.ExecuteCommandByID(3912);				// 👉将焦点设置在筛选工具栏
 	if (strModule == "Regex")						// 正则匹配👈
@@ -51,7 +63,7 @@ function Overlay_Lines(strModule, strFilter) {
 	document.selection.Paste(eeCopyUnicode);		// 👉粘贴覆盖
 }
 
-// ✅字符串替换
+// 字符串替换
 function Replace_Words(strModule,strFind, strReplace) {
 	if (strModule == "Regex")						// 正则替换👈
 		document.selection.Replace(strFind, strReplace, eeReplaceAll | eeFindReplaceRegExp, 0);
@@ -63,7 +75,9 @@ function Replace_Words(strModule,strFind, strReplace) {
 
 // ------------------------------------------------------------------------------------------------
 
-// 格式处理相关函数
+// 文本排版相关函数
+
+// ------------------------------------------------------------------------------------------------
 
 // 删除重复行 & 按字母升序排序
 // 这个函数一般在整个流程的尾部加上就足够了，数据处理的中间过程用不用这个函数其实无所谓
@@ -97,28 +111,15 @@ function UnMake_Table() {
 
 // ------------------------------------------------------------------------------------------------
 
-// 在 EmEditor 中，有很多的 Javascript 的语法没有办法实现
-// 比如 import fetch 等等，在 V8 模式下是不支持的
-
-// ------------------------------------------------------------------------------------------------
-
-// 比如
-// ❓如何在 javascript 文件中调用另一个 javascript 中的函数？
-// 🔗https://stackoverflow.com/questions/15276672/how-to-use-a-function-across-multiple-js-files
-// 🔗https://www.cnblogs.com/xhliang/p/11765223.html
-// 🔗https://stackoverflow.com/questions/36919916/shared-javascript-file-with-different-definitions-of-a-function-call
-// 🤔 这个方法没有尝试，但是可能在 EmEditor 中也不能用罢。
-// 怎么说呢，很难不流汗啊
-
-// ------------------------------------------------------------------------------------------------
-
-// 下面是一些网络黑名单
-// 黑名单不宜过短，过短则会误杀一些有用的网址，因此短词语最好是加上 dot 符号。
-// 目前的这个黑名单只能说讲究能用，但是这个黑名单其实还没有形成体系，只能是在实践中不断尝试。
+// 网址个性化处理相关函数
 
 // ------------------------------------------------------------------------------------------------
 
 // 网络黑名单
+
+// 需要注意的是，黑名单不宜过短，过短则会误杀一些有用的网址
+// 如果筛选的词语真的很短，最好是加上 dot 符号来区别一下
+// 🔴🔴🔴🔴很遗憾，目前的这个黑名单只能说讲究能用，但是这个黑名单其实还没有形成体系，只能是在实践中不断尝试。
 
 function Delete_Blacklist() {
 	// 1 电商平台
@@ -503,8 +504,7 @@ function Delete_Blacklist() {
 
 // ------------------------------------------------------------------------------------------------
 
-// 从文本行中提取网址
-// 直接将网址从文本行中提取出来，然后覆盖原来已有的文本
+// 从文本行中提取网址 - 直接将网址从文本行中提取出来，然后覆盖原来已有的文本
 
 function Extract_URLs_From_Lines(strFilter) {
 	// strFilter 这个参数可以缺省，也可以规定
@@ -515,12 +515,13 @@ function Extract_URLs_From_Lines(strFilter) {
 
 	// 处理头部，直接在网址前面加上换行
 	Replace_Words("Regex","https","\\nhttps");				// 网址前面加上换行
-	Overlay_Lines("Normal",URL_Front);						// 提取 URL_Front
+	Overlay_Lines("Normal", URL_Front);						// 提取 URL_Front
+
 	// 处理尾部，统一使用正则替换为换行符
 	// 此处删除的仅仅是网址的尾部的一些没有意义的字符，这些字符往往是网址后面紧接着出现的字符
 	// 有很多网址仅仅是，比如网址的尾部是否有 / 而被当作两个网址看待，这个是不行的
-	// 需要说明的是，此处的尾部处理不会删除网址中自带的定位信息（如参数和锚点），即 ? # & @ 等符号，这些定位信息的删除可以使用下面的 Delete_Parameters_And_Anchors() 函数
-
+	// 需要说明的是，此处的尾部处理不会删除网址中自带的定位信息（如参数和锚点），即 ? # & @ 等符号
+	// 这些定位信息的删除可以使用下面的 Delete_Parameters_And_Anchors() 函数
 	// 一方面，对于不会出现在网址中间的字符，直接正则替换为换行符即可
 	Replace_Words("Regex"," ", "\\n");						// 空格
 	Replace_Words("Regex","\\|", "\\n");					// 竖线
@@ -547,7 +548,6 @@ function Extract_URLs_From_Lines(strFilter) {
 
 // 删除网址的内部定位消息
 
-// Way 01 - better
 // 👉🔗https://developer.mozilla.org/zh-CN/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL#%E5%8F%82%E6%95%B0
 // 网址内部的参数和锚点其实是有特殊符号的格式的，只需要正则替换掉 ? # @ & = 等符号就可以删除掉网址内部的定位信息
 // 
@@ -559,30 +559,6 @@ function Delete_Parameters_And_Anchors() {
 	Replace_Words("Regex", "\\/\\n", "\\n");				// 删除网址尾部的多余的斜杠
 	Overlay_Lines("Normal",URL_Front);						// 提取需要的网址
 }
-
-// Way_02
-// 根据网址的规律，如果按照斜杠符来制表的话，前 5 列的数据已经可以表示唯一表示一个网址，比如：
-// https://github.com/username/projectname				--> 需要 5 列数据
-// https://github.com/username?tab=stars				--> 需要 4 列数据
-// https://www.bilibili.com/video/BV1a24y1J7oM			--> 需要 5 列数据
-// https://ttsmaker.com/zh-cn							--> 需要 4 列数据
-
-// 这里选择英文逗号，因为 EmEditor 有默认的逗号制表，并且唯一配对一个 ExecuteCommandByID ，当然选择制表符也是可以的
-// 但是选择 / 当作制表符会引起一些麻烦，不建议这么做
-// 因为将 / 当作制表符之后，删除了网址内部定位信息之后，回到标准模式会发现 / 未删除，有些网址尾部出现 //
-// 比如，网址 https://github.com/YvetteQSystim/Telegram-Data-to-URL-Lines/settings/actions
-// 会变成 https://github.com/YvetteQSystim/Telegram-Data-to-URL-Lines// 👈尾部会出现 //
-// 某些时候这个尾部不影响网址查询，但是想要删除尾部的 // 的时候需要考虑到不能删除 https:// 中的 // ，这在无形中增加了工作量
-
-// function Delete_Parameters_And_Anchors() {
-	// Replace_Words("Normal", "/", "/,");				        // 斜杠后面加上一个逗号
-	// Make_Table(",");										// 英文逗号制表
-	// document.selection.SelectColumn(6, 20);					// 选中后面的 6 - 20 列的数据（20 是往大估计的数）
-	// editor.ExecuteCommandByID(4033);						// 清除内容（仅限单元格选择模式）
-	// UnMake_Table();											// 标准模式，即文本模式
-	// Replace_Words("Normal",",", "");						// 再把英文逗号删除
-	// Replace_Words("Regex", "/\\n", "\\n");					// 如果网址以 / 结尾，则删除结尾的 /
-// }
 
 // ------------------------------------------------------------------------------------------------
 

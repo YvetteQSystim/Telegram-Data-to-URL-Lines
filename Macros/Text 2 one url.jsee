@@ -15,7 +15,8 @@
 
 // 🪴  1  选定需要的网址类型
 
-var URL_Front = "https://github.com"					// 后文的这一类网址使用 URL_Front 这个变量来指代
+// var URL_Front = "https://github.com"
+var URL_Front = "https://arxiv.org"
 Extract_Lines("Normal", URL_Front);						// 因为没有时间限制，所以可以直接选取需要的网址信息
 Delete_Indent();										// 删除缩进
 
